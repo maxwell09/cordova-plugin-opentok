@@ -636,6 +636,7 @@ TBPublisher = (function() {
     var streamEvent;
     streamEvent = new TBEvent("audioLevelUpdated");
     streamEvent.audioLevel = event.audioLevel;
+    this.dispatchEvent(streamEvent);
     return this;
   };
 
@@ -1298,6 +1299,7 @@ TBSubscriber = (function() {
     var streamEvent;
     streamEvent = new TBEvent("audioLevelUpdated");
     streamEvent.audioLevel = event.audioLevel;
+    this.dispatchEvent(streamEvent);
     return this;
   };
 

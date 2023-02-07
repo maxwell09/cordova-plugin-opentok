@@ -119,8 +119,9 @@ public class OpenTokAndroidPlugin extends CordovaPlugin
             float videoWidth = getWidth();
             float videoHeight = getHeight();
             if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                videoWidth = getHeight();
-                videoHeight = getWidth();
+                // Commenting because it causes issues (wrong height and everything is stagged) when using landscape orientation
+                //videoWidth = getHeight();
+                //videoHeight = getWidth();
             }
 
             float videoRatio = (videoHeight / videoWidth);

@@ -1,10 +1,15 @@
 window.OT = {
+  publishers: [],
   timeStreamCreated: {},
   checkSystemRequirements: function() {
-    return 1;
+      return 1;
   },
   initPublisher: function(one, two) {
-    return new TBPublisher(one, two);
+      let publisher = new TBPublisher(one, two);
+
+      this.publishers.push(publisher);
+
+      return publisher;
   },
   initSession: function(apiKey, sessionId) {
     if (sessionId == null) {
@@ -166,7 +171,7 @@ TBEvent = (function() {
 
 })();
 
-var OTDomObserver, OTObserveVideoContainer, OTOnScrollEvent, OTPublisherError, OTReplacePublisher, TBError, TBGenerateDomHelper, TBGetBorderRadius, TBGetScreenRatios, TBGetZIndex, TBSuccess, TBUpdateObjects, getPosition, pdebug, replaceWithVideoStream, streamElements;
+var OTDomObserver, OTObserveVideoContainer, OTOnScrollEvent, OTPublisherError, OTInformPermissionDenied, OTReplacePublisher, TBError, TBGenerateDomHelper, TBGetBorderRadius, TBGetScreenRatios, TBGetZIndex, TBSuccess, TBUpdateObjects, getPosition, pdebug, replaceWithVideoStream, streamElements;
 
 streamElements = {};
 
@@ -237,6 +242,7 @@ TBSuccess = function() {
 OTPublisherError = function(error) {
   if (error === "permission denied") {
     OTReplacePublisher();
+    OTInformPermissionDenied();
     return TBError("Camera or Audio Permission Denied");
   } else {
     return TBError(error);
@@ -357,6 +363,18 @@ TBGetScreenRatios = function() {
     heightRatio: window.outerHeight / window.innerHeight
   };
 };
+
+OTInformPermissionDenied = function() {
+    console.log("OT Publishers:");
+    console.log(OT.publishers);
+
+    for (let i = 0; i < OT.publishers.length; i++){
+
+        let event = {};
+
+        OT.publishers[i].trigger('accessDenied', event);
+    }
+}
 
 OTReplacePublisher = function() {
   var attribute, attributes, childClass, childElement, el, elAttribute, element, elementChildren, elements, _i, _j, _k, _len, _len1, _len2;
@@ -598,6 +616,10 @@ TBPublisher = (function() {
 
   TBPublisher.prototype.destroy = function() {
     if (this.pubElement) {
+      
+      // Aim at the contextual publisher (by comparing the ids) ?
+      OT.publishers = [];
+      
       return Cordova.exec(this.removePublisherElement, TBError, OTPlugin, "destroyPublisher", []);
     }
   };

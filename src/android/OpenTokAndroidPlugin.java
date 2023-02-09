@@ -532,7 +532,27 @@ public class OpenTokAndroidPlugin extends CordovaPlugin
             mSubscriber.setVideoListener(this);
             mSubscriber.setSubscriberListener(this);
             mSubscriber.setAudioLevelListener(this);
-            mSubscriber.setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
+                
+            // Notes:
+            // STYLE_VIDEO_FILL -> fitMode = "cover"
+            // STYLE_VIDEO_FIT -> fitMode = "contain"
+            String fitMode = BaseVideoRenderer.STYLE_VIDEO_FILL;
+
+            if(args != null){
+                try {
+                    fitMode = args.getString(11);
+
+                    if(fitMode.equals("cover")){
+                        fitMode = BaseVideoRenderer.STYLE_VIDEO_FILL;
+                    }
+
+                    if(fitMode.equals("contain")){
+                        fitMode = BaseVideoRenderer.STYLE_VIDEO_FIT;
+                    }
+
+                } catch (Exception e) {}
+            }
+            mSubscriber.setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, fitMode);
 
             mSession.subscribe(mSubscriber);
             cordova.getActivity().runOnUiThread(this);

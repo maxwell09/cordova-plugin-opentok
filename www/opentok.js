@@ -1206,7 +1206,7 @@ TBSubscriber = (function() {
     this.disconnected = __bind(this.disconnected, this);
     this.connected = __bind(this.connected, this);
     this.eventReceived = __bind(this.eventReceived, this);
-    var borderRadius, divPosition, height, insertMode, name, obj, position, ratios, subscribeToAudio, subscribeToVideo, width, zIndex, _ref, _ref1;
+    var borderRadius, divPosition, height, insertMode, fitMode, name, obj, position, ratios, subscribeToAudio, subscribeToVideo, width, zIndex, _ref, _ref1;
     if (divObject instanceof Element) {
       this.element = divObject;
       this.id = this.element.id;
@@ -1220,6 +1220,7 @@ TBSubscriber = (function() {
     subscribeToVideo = "true";
     zIndex = TBGetZIndex(this.element);
     insertMode = "replace";
+    fitMode = "cover";
     if ((properties != null)) {
       width = properties.width || divPosition.width;
       height = properties.height || divPosition.height;
@@ -1233,6 +1234,7 @@ TBSubscriber = (function() {
         subscribeToAudio = "false";
       }
       insertMode = (_ref1 = properties.insertMode) != null ? _ref1 : insertMode;
+      fitMode = properties.fitMode && (properties.fitMode !== fitMode) && (properties.fitMode === 'cover' || properties.fitMode === 'contain') ? properties.fitMode : fitMode;
     }
     if ((width == null) || width === 0 || (height == null) || height === 0) {
       width = DefaultWidth;
@@ -1251,7 +1253,7 @@ TBSubscriber = (function() {
     borderRadius = TBGetBorderRadius(this.element);
     ratios = TBGetScreenRatios();
     OT.getHelper().eventing(this);
-    Cordova.exec(TBSuccess, TBError, OTPlugin, "subscribe", [stream.streamId, position.top, position.left, width, height, zIndex, subscribeToAudio, subscribeToVideo, ratios.widthRatio, ratios.heightRatio, borderRadius]);
+    Cordova.exec(TBSuccess, TBError, OTPlugin, "subscribe", [stream.streamId, position.top, position.left, width, height, zIndex, subscribeToAudio, subscribeToVideo, ratios.widthRatio, ratios.heightRatio, borderRadius, fitMode]);
     Cordova.exec(this.eventReceived, TBSuccess, OTPlugin, "addEvent", ["subscriberEvents"]);
   }
 

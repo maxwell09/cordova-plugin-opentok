@@ -1323,6 +1323,7 @@ TBSubscriber = (function() {
     var streamEvent;
     streamEvent = new TBEvent("audioLevelUpdated");
     streamEvent.audioLevel = event.audioLevel;
+    streamEvent.stream = this.stream ? this.stream.streamId : null;
     this.dispatchEvent(streamEvent);
     return this;
   };

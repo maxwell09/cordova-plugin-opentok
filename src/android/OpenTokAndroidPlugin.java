@@ -444,7 +444,7 @@ public class OpenTokAndroidPlugin extends CordovaPlugin
         }
 
         public void run() {
-            if(this.mView == null) {
+            if(this.mView == null && mPublisher != null) {
                 this.mView = new CameraView(cordova.getActivity().getApplicationContext(), (TextureView) mPublisher.getView());
                 ((ViewGroup) webView.getView().getParent()).addView(this.mView);
 

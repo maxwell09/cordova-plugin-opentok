@@ -96,6 +96,7 @@ class TBPublisher
 
   destroy: ->
     if(@pubElement)
+      OT.publishers = []
       Cordova.exec( @removePublisherElement, TBError, OTPlugin, "destroyPublisher", [])
   getImgData: ->
     return ""

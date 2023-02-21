@@ -124,6 +124,9 @@ class TBSubscriber
   audioLevelUpdated: (event) =>
     streamEvent = new TBEvent("audioLevelUpdated")
     streamEvent.audioLevel = event.audioLevel
+    streamEvent.stream = null
+    if(this.stream?)
+      streamEvent.stream = this.stream.streamId
     @dispatchEvent(streamEvent)
     return @
 

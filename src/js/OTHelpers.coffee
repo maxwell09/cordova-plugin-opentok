@@ -65,6 +65,7 @@ TBSuccess = ->
 OTPublisherError = (error) ->
   if error == "permission denied"
     OTReplacePublisher()
+    OTInformPermissionDenied()
     TBError("Camera or Audio Permission Denied")
   else
     TBError(error)
@@ -170,6 +171,12 @@ OTReplacePublisher = ()->
         element.removeChild childElement
         break
     return
+  
+OTInformPermissionDenied = ()->
+  for publisher in OT.publishers
+    event = {}
+    publisher.trigger('accessDenied',event)
+  return
 
 OTObserveVideoContainer = (() ->
   videoContainerObserver = new MutationObserver((mutations) ->

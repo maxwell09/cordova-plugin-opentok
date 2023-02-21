@@ -11,11 +11,14 @@
 #     TB.upgradeSystemRequirements()
 
 window.OT =
+  publishers: []
   timeStreamCreated: {}
   checkSystemRequirements: ->
     return 1
   initPublisher: (one, two) ->
-    return new TBPublisher( one, two )
+    publisher = new TBPublisher( one, two )
+    this.publishers.push publisher
+    return publisher
   initSession: (apiKey, sessionId ) ->
     if( not sessionId? ) then @showError( "OT.initSession takes 2 parameters, your API Key and Session ID" )
     return new TBSession(apiKey, sessionId)

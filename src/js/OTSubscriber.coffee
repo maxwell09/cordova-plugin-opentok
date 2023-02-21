@@ -54,6 +54,7 @@ class TBSubscriber
     subscribeToVideo="true"
     zIndex = TBGetZIndex(@element)
     insertMode = "replace"
+    fitMode = "cover"
     if(properties?)
       width = properties.width || divPosition.width
       height = properties.height || divPosition.height
@@ -65,6 +66,8 @@ class TBSubscriber
       if(properties.subscribeToAudio? and properties.subscribeToAudio == false)
         subscribeToAudio="false"
       insertMode = properties.insertMode ? insertMode
+      if(properties.fitMode? and (properties.fitMode != fitMode) and (properties.fitMode == 'cover' or properties.fitMode == 'contain'))
+        fitMode = properties.fitMode
     if (not width?) or width == 0 or (not height?) or height==0
       width = DefaultWidth
       height = DefaultHeight
@@ -77,7 +80,7 @@ class TBSubscriber
     borderRadius = TBGetBorderRadius(@element)
     ratios = TBGetScreenRatios()
     OT.getHelper().eventing(@)
-    Cordova.exec(TBSuccess, TBError, OTPlugin, "subscribe", [stream.streamId, position.top, position.left, width, height, zIndex, subscribeToAudio, subscribeToVideo, ratios.widthRatio, ratios.heightRatio, borderRadius] )
+    Cordova.exec(TBSuccess, TBError, OTPlugin, "subscribe", [stream.streamId, position.top, position.left, width, height, zIndex, subscribeToAudio, subscribeToVideo, ratios.widthRatio, ratios.heightRatio, borderRadius, fitMode] )
     Cordova.exec(@eventReceived, TBSuccess, OTPlugin, "addEvent", ["subscriberEvents"] )
 
   eventReceived: (response) =>

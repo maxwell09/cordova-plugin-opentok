@@ -1324,7 +1324,7 @@ TBSubscriber = (function() {
     streamEvent = new TBEvent("audioLevelUpdated");
     streamEvent.audioLevel = event.audioLevel;
     streamEvent.stream = this.stream ? this.stream.streamId : null;
-    this.dispatchEvent(streamEvent);
+    //this.dispatchEvent(streamEvent); // Does not work with more than 1 subscriber
     return this;
   };
 

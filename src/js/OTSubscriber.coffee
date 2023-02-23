@@ -127,7 +127,7 @@ class TBSubscriber
     streamEvent.stream = null
     if(this.stream?)
       streamEvent.stream = this.stream.streamId
-    @dispatchEvent(streamEvent)
+    # @dispatchEvent(streamEvent) # Does not work with more than 1 subscriber
     return @
 
   # deprecating

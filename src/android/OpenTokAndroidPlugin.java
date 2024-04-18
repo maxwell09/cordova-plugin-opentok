@@ -438,6 +438,18 @@ public class OpenTokAndroidPlugin extends CordovaPlugin
 
             this.removeView();
             if (this.mPublisher != null) {
+
+                BaseVideoCapturer bvc = mPublisher.getCapturer();
+                // If still capturing, stop it and release.
+                if(bvc != null){
+                    Log.i(TAG, "Stopping and releasing the camera");
+
+                    bvc.stopCapture();
+                    bvc.destroy();
+                    mPublisher.setPublishVideo(false);
+                    mPublisher.setPublishAudio(false);
+                }
+                    
                 this.mPublisher.destroy();
                 this.mPublisher = null;
             }

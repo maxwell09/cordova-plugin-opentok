@@ -374,6 +374,8 @@
 
     // Remove publisher view
     if (_publisher) {
+        NSLog(@"iOS Realasing capture");
+        [_publisher.videoCapture releaseCapture];
         [_publisher.view removeFromSuperview];
     }
 

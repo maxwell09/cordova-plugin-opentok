@@ -26,13 +26,21 @@
 #pragma mark -
 #pragma mark Cordova Methods
 -(void) pluginInitialize{
-    // Make the web view transparent.
     [self.webView setOpaque:false];
     [self.webView setBackgroundColor:UIColor.clearColor];
-
+    
+    // Make the internal WKScrollView transparent (fixes the black background)
+    for (UIView *child in self.webView.subviews) {
+        if ([child isKindOfClass:[UIScrollView class]]) {
+            child.opaque = NO;
+            child.backgroundColor = UIColor.clearColor;
+        }
+    }
+    
     statusBarPlugin = true;
     callbackList = [[NSMutableDictionary alloc] init];
 }
+
 - (void)addEvent:(CDVInvokedUrlCommand*)command{
     NSString* event = [command.arguments objectAtIndex:0];
     [callbackList setObject:command.callbackId forKey: event];
@@ -173,7 +181,7 @@
     [_publisher setPublishAudio:bpubAudio];
     [_publisher setPublishVideo:bpubVideo];
     [_publisher setAudioFallbackEnabled:baudioFallbackEnabled];
-    [self.webView.superview addSubview:_publisher.view];
+    [self insertView:_publisher.view withZIndex:zIndex];
 
     [self setPosition: @"TBPublisher" top: top left: left width: width height: height];
 
@@ -215,8 +223,38 @@
     CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
+// Helper function to insert a new view
+- (void)insertView:(UIView*)view withZIndex:(int)zIndex {
+    UIView *container = self.webView.superview;
+    view.layer.zPosition = zIndex;
+
+    if (zIndex < 0) {
+        // Trouver le bon index pour respecter l'ordre
+        NSInteger insertIndex = 0;
+        for (NSInteger i = 0; i < container.subviews.count; i++) {
+            UIView *sub = container.subviews[i];
+            if (sub == self.webView) break; // Ne jamais dépasser la WebView
+            if (sub.layer.zPosition <= zIndex) {
+                insertIndex = i + 1;
+            }
+        }
+        [container insertSubview:view atIndex:insertIndex];
+        view.userInteractionEnabled = NO;
+    } else {
+        [container addSubview:view];
+        view.userInteractionEnabled = YES;
+    }
+}
 // Helper function to update Views
 - (void)updateView:(CDVInvokedUrlCommand*)command{
+    // Ensure WKScrollView is transparent (fixes the black background)
+    for (UIView *child in self.webView.subviews) {
+        if ([child isKindOfClass:[UIScrollView class]]) {
+            child.opaque = NO;
+            child.backgroundColor = UIColor.clearColor;
+        }
+    }
+    
     NSString* callback = command.callbackId;
     NSString* sid = [command.arguments objectAtIndex:0];
     CGFloat top = [[command.arguments objectAtIndex:1] floatValue];
@@ -252,55 +290,109 @@
     maskLayer.path = path;
 
     if ([sid isEqualToString:@"TBPublisher"]) {
+        UIView *v = self.webView.superview;
+        while (v != nil && ![v isKindOfClass:[UIWindow class]]) {
+            v.backgroundColor = UIColor.clearColor;
+            v.opaque = NO;
+            v = v.superview;
+        }
+        
         NSLog(@"The Width is: %d", width);
         // Reposition the video feeds!
         [self setPosition: sid top: top left: left width: width height: height];
 
         _publisher.view.layer.mask = maskLayer;
 
-        _publisher.view.layer.mask = maskLayer;
-
-        // Set depth location of camera view based on CSS z-index.
-        _publisher.view.layer.zPosition = zIndex;
-
-        // Ensure that we can click through view when it's behind WebView
-        _publisher.view.userInteractionEnabled = YES;
-        if(zIndex < 0) {
-            _publisher.view.userInteractionEnabled = NO;
-        }
+        // Inserting the view
+        [self insertView:_publisher.view withZIndex:zIndex];
 
         // If the zIndex is 0(default) bring the view to the top, last one wins.
         // See: https://github.com/saghul/cordova-plugin-iosrtc/blob/5b6a180b324c8c9bac533fa481a457b74183c740/src/PluginMediaStreamRenderer.swift#L191
-        if(zIndex == 0) {
-            [self.webView.superview bringSubviewToFront:_publisher.view];
-        }
+        //if(zIndex == 0) {
+        //    [self.viewController.view bringSubviewToFront:_publisher.view];
+        //}
     }
 
     // Pulls the subscriber object from dictionary to prepare it for update
     OTSubscriber* streamInfo = [subscriberDictionary objectForKey:sid];
 
     if (streamInfo) {
+        // Apply transparency on all layers
+        UIView *v = self.webView.superview;
+        while (v != nil && ![v isKindOfClass:[UIWindow class]]) {
+            v.backgroundColor = UIColor.clearColor;
+            v.opaque = NO;
+            v = v.superview;
+        }
+        
+        self.webView.superview.backgroundColor = UIColor.clearColor;
+        self.webView.superview.opaque = NO;
+        
         // Reposition the video feeds!
         [self setPosition: sid top: top left: left width: width height: height];
 
         streamInfo.view.layer.mask = maskLayer;
 
-        streamInfo.view.layer.mask = maskLayer;
+        // Inserting the view
+        [self insertView:streamInfo.view withZIndex:zIndex];
+        
+        // VIEWS DEBUGGING
+        /*
+        NSLog(@"=== HIERARCHY: container backgroundColor: %@", self.webView.superview.backgroundColor);
+        NSLog(@"=== HIERARCHY: container opaque: %d", self.webView.superview.isOpaque);
+        NSLog(@"=== HIERARCHY: webView backgroundColor: %@", self.webView.backgroundColor);
+        NSLog(@"=== HIERARCHY: webView opaque: %d", self.webView.isOpaque);
+        NSLog(@"=== HIERARCHY: subviews in container: %lu", self.webView.superview.subviews.count);
+        NSLog(@"=== HIERARCHY: subscriber view frame: %@", NSStringFromCGRect(streamInfo.view.frame));
+        NSLog(@"=== HIERARCHY: subscriber view superview after insert: %@", streamInfo.view.superview);
 
-        // Set depth location of camera view based on CSS z-index.
-        streamInfo.view.layer.zPosition = zIndex;
+        NSLog(@"=== HIERARCHY: subscriber view superview AFTER insert: %@", streamInfo.view.superview);
+        NSLog(@"=== HIERARCHY: container subviews order: %@", self.webView.superview.subviews);
 
-        // Ensure that we can click through view when it's behind WebView
-        streamInfo.view.userInteractionEnabled = YES;
-        if(zIndex < 0) {
-            streamInfo.view.userInteractionEnabled = NO;
+        int level = 0;
+        while (v != nil) {
+            NSLog(@"=== HIERARCHY PARENT[%d]: %@ | bg: %@ | opaque: %d | frame: %@",
+                level,
+                NSStringFromClass([v class]),
+                v.backgroundColor,
+                v.isOpaque,
+                NSStringFromCGRect(v.frame)
+            );
+            v = v.superview;
+            level++;
         }
+
+        for (int i = 0; i < self.webView.superview.subviews.count; i++) {
+            UIView *sub = self.webView.superview.subviews[i];
+            NSLog(@"=== HIERARCHY SUBVIEW[%d]: %@ | zPosition: %f | frame: %@",
+                i,
+                NSStringFromClass([sub class]),
+                sub.layer.zPosition,
+                NSStringFromCGRect(sub.frame)
+            );
+        }
+
+        NSLog(@"=== WKWebView internal subviews:");
+        for (UIView *sub in self.webView.subviews) {
+            NSLog(@"  child: %@ | opaque: %d | bg: %@",
+                NSStringFromClass([sub class]),
+                sub.isOpaque,
+                sub.backgroundColor);
+            for (UIView *sub2 in sub.subviews) {
+                NSLog(@"    grandchild: %@ | opaque: %d | bg: %@",
+                    NSStringFromClass([sub2 class]),
+                    sub2.isOpaque,
+                    sub2.backgroundColor);
+            }
+        }
+        */
+        // /VIEWS DEBUGGING
 
         // If the zIndex is 0(default) bring the view to the top, last one wins.
         // See: https://github.com/saghul/cordova-plugin-iosrtc/blob/5b6a180b324c8c9bac533fa481a457b74183c740/src/PluginMediaStreamRenderer.swift#L191
-        if(zIndex == 0) {
-            [self.webView.superview bringSubviewToFront:_publisher.view];
-        }
+        //if(zIndex == 0) {
+        //    [self.viewController.view bringSubviewToFront:streamInfo.view];
+        //}
     }
 
     CDVPluginResult* callbackResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
@@ -455,6 +547,13 @@
     // Get Parameters
     NSString* sid = [command.arguments objectAtIndex:0];
 
+    // Avoid duplication
+    if ([subscriberDictionary objectForKey:sid]) {
+        NSLog(@"Already subscribed to stream %@", sid);
+        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+        return;
+    }
 
     CGFloat top = [[command.arguments objectAtIndex:1] floatValue];
     CGFloat left = [[command.arguments objectAtIndex:2] floatValue];
@@ -505,11 +604,11 @@
 
     sub.view.layer.mask = maskLayer;
 
-
     // Set depth location of camera view based on CSS z-index.
     sub.view.layer.zPosition = zIndex;
 
-    [self.webView.superview addSubview:sub.view];
+    // Inserting the view
+    [self insertView:sub.view withZIndex:zIndex];
 
     // Return to JS event handler
     CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];

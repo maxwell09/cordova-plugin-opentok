@@ -299,16 +299,14 @@ public class OpenTokAndroidPlugin extends CordovaPlugin
             @Override
             public void onCameraAvailable(String cameraId) {
                 super.onCameraAvailable(cameraId);
-                if(mPublisher != null && publishing) {
+                if(mPublisher != null && publishing && inBackground) {
                     BaseVideoCapturer bvc = mPublisher.getCapturer();
                     // If not yet capturing.. Initialize and start capturing..
                     if (bvc != null && !bvc.isCaptureStarted()) {
                         Log.i(TAG, "Camera available");
                         try {
                             // Camera claimed in background.
-                            if(inBackground) {
-                                claimedInBackground = true;
-                            }
+                            claimedInBackground = true;
                             bvc.init();
                             bvc.startCapture();
                             mPublisher.setPublishVideo(oldPublishVideoState);
@@ -505,11 +503,28 @@ public class OpenTokAndroidPlugin extends CordovaPlugin
             triggerStreamEvent(arg1, "publisherEvents", "streamDestroyed");
         }
 
-        @Override
-        public void onCameraChanged(Publisher arg0, int arg1) {
-            // TODO Auto-generated method stub
-
-        }
+         @Override
+          public void onCameraChanged(Publisher arg0, int arg1) {
+              cordova.getActivity().runOnUiThread(new Runnable() {
+                  @Override
+                  public void run() {
+                      try {
+                          ViewGroup parent = (ViewGroup) webView.getView().getParent();
+                          if (mView != null) {
+                              parent.removeView(mView);
+                          }
+                          mView = new CameraView(cordova.getActivity().getApplicationContext(), (TextureView) mPublisher.getView());
+                          parent.addView(mView);
+                          if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                              mView.setTranslationZ(getZIndex());
+                          }
+                          setPosition();
+                      } catch (Exception e) {
+                          Log.i(TAG, "onCameraChanged: error updating camera view: " + e.getMessage());
+                      }
+                  }
+              });
+          }
 
         @Override
         public void onCameraError(Publisher arg0, OpentokError arg1) {
@@ -770,7 +785,13 @@ public class OpenTokAndroidPlugin extends CordovaPlugin
 
             // publisher methods
         } else if (action.equals("setCameraPosition")) {
-            myPublisher.mPublisher.cycleCamera();
+          cordova.getActivity().runOnUiThread(new Runnable() {
+                  @Override
+                  public void run() {
+                      myPublisher.mPublisher.cycleCamera();
+                  }
+          });
+          callbackContext.success();
         } else if (action.equals("publishAudio")) {
             String val = args.getString(0);
             boolean publishAudio = true;

@@ -28,6 +28,12 @@
 -(void) pluginInitialize{
     [self.webView setOpaque:false];
     [self.webView setBackgroundColor:UIColor.clearColor];
+
+    // Also clear the WKWebView scrollView background — required in Capacitor where
+    // the scrollView retains its own background even when the webView itself is transparent.
+    if ([self.webView isKindOfClass:[WKWebView class]]) {
+        ((WKWebView *)self.webView).scrollView.backgroundColor = UIColor.clearColor;
+    }
     
     // Make the internal WKScrollView transparent (fixes the black background)
     for (UIView *child in self.webView.subviews) {
